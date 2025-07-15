@@ -44,8 +44,8 @@
         const webhookStatusDiv = document.getElementById('webhook-status');
         const webhookMessageSpan = document.getElementById('webhook-message');
 
-        // IMPORTANT: Replace this with your actual webhook URL
-        const WEBHOOK_URL = 'https://webhook.site/16598944-0e2e-406b-8990-3a7e592cd011'; // e.g., 'https://webhook.site/your-unique-id'
+        // Your webhook URL (already provided: https://webhook.site/16598944-0e2e-406b-8990-3a7e592cd011)
+        const WEBHOOK_URL = 'https://webhook.site/16598944-0e2e-406b-8990-3a7e592cd011';
 
         /**
          * Displays a message in the status area.
@@ -76,18 +76,30 @@
             webhookMessageSpan.classList.remove('text-red-600', 'text-green-600');
             webhookMessageSpan.classList.add('text-blue-600');
 
+            const payload = {
+                latitude: lat,
+                longitude: lon,
+                timestamp: new Date().toISOString()
+            };
+
+            console.log('Preparing to send payload:', payload);
+            const jsonPayload = JSON.stringify(payload);
+            console.log('Sending JSON payload (stringified):', jsonPayload);
+
             try {
                 const response = await fetch(WEBHOOK_URL, {
                     method: 'POST',
+                    // IMPORTANT: Changed Content-Type to text/plain to bypass CORS preflight for testing.
+                    // The webhook will receive the JSON string as plain text.
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'text/plain', // This is the key change for CORS bypass
+                        'Accept': 'application/json'
                     },
-                    body: JSON.stringify({
-                        latitude: lat,
-                        longitude: lon,
-                        timestamp: new Date().toISOString()
-                    }),
+                    body: jsonPayload,
+                    mode: 'cors'
                 });
+
+                console.log('Raw webhook response:', response);
 
                 if (response.ok) {
                     webhookMessageSpan.textContent = 'Successfully sent!';
@@ -100,6 +112,7 @@
                     webhookMessageSpan.classList.remove('text-blue-600');
                     webhookMessageSpan.classList.add('text-red-600');
                     console.error('Failed to send geolocation data:', response.status, response.statusText, errorText);
+                    console.error('Webhook response text:', errorText);
                 }
             } catch (error) {
                 webhookMessageSpan.textContent = `Error sending: ${error.message}`;
@@ -122,13 +135,13 @@
             displayStatus('Location obtained successfully!', 'success');
 
             // Send data to webhook
-            if (WEBHOOK_URL && WEBHOOK_URL !== 'YOUR_WEBHOOK_URL_HERE') {
+            if (WEBHOOK_URL && WEBHOOK_URL !== 'https://webhook.site/16598944-0e2e-406b-8990-3a7e592cd011') { // Check if URL is set
                 sendToWebhook(latitude, longitude);
             } else {
                 webhookStatusDiv.classList.remove('hidden');
                 webhookMessageSpan.textContent = 'Webhook URL not configured. Data not sent.';
                 webhookMessageSpan.classList.add('text-red-600');
-                console.warn('Webhook URL is not set. Please update the WEBHOOK_URL variable.');
+                console.warn('Webhook URL is not set. Please update the WEBHOOK_URL variable in the script.');
             }
         }
 
