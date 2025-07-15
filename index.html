@@ -44,7 +44,7 @@
         const webhookStatusDiv = document.getElementById('webhook-status');
         const webhookMessageSpan = document.getElementById('webhook-message');
 
-        // Your webhook URL (already provided: https://webhook.site/16598944-0e2e-406b-8990-3a7e592cd011)
+        // Your webhook URL
         const WEBHOOK_URL = 'https://webhook.site/16598944-0e2e-406b-8990-3a7e592cd011';
 
         /**
@@ -89,10 +89,8 @@
             try {
                 const response = await fetch(WEBHOOK_URL, {
                     method: 'POST',
-                    // IMPORTANT: Changed Content-Type to text/plain to bypass CORS preflight for testing.
-                    // The webhook will receive the JSON string as plain text.
                     headers: {
-                        'Content-Type': 'text/plain', // This is the key change for CORS bypass
+                        'Content-Type': 'text/plain', // Using text/plain to bypass CORS preflight for testing
                         'Accept': 'application/json'
                     },
                     body: jsonPayload,
@@ -135,7 +133,7 @@
             displayStatus('Location obtained successfully!', 'success');
 
             // Send data to webhook
-            if (WEBHOOK_URL && WEBHOOK_URL !== 'YOUR_WEBHOOK_URL_HERE') { // Check if URL is set
+            if (WEBHOOK_URL && WEBHOOK_URL !== 'YOUR_WEBHOOK_URL_HERE') {
                 sendToWebhook(latitude, longitude);
             } else {
                 webhookStatusDiv.classList.remove('hidden');
@@ -178,8 +176,8 @@
             if (navigator.geolocation) {
                 displayStatus('Requesting your location...');
                 navigator.geolocation.getCurrentPosition(successCallback, errorCallback, {
-                    enableHighAccuracy: true,
-                    timeout: 10000, // 10 seconds
+                    enableHighAccuracy: false, // Try false for better success rates on some devices
+                    timeout: 15000, // Increased timeout to 15 seconds
                     maximumAge: 0 // Do not use cached position
                 });
             } else {
