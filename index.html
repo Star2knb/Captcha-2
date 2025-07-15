@@ -1,33 +1,181 @@
 <!DOCTYPE html>
-<html>
-<body>
-<h1>HTML Geolocation</h1>
-<p>Click the button to get your coordinates.</p>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automatic Geolocation Sender</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center border border-gray-200">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Location Sender</h1>
 
-<button onclick="getLocation()">Try It</button>
+        <div id="status-message" class="mb-4 p-3 rounded-lg text-sm font-medium">
+            <p class="text-gray-600">Attempting to get your location...</p>
+        </div>
 
-<p id="demo"></p>
+        <div class="space-y-3 mb-6">
+            <p class="text-gray-700 text-lg">
+                Latitude: <span id="latitude" class="font-semibold text-blue-600">N/A</span>
+            </p>
+            <p class="text-gray-700 text-lg">
+                Longitude: <span id="longitude" class="font-semibold text-blue-600">N/A</span>
+            </p>
+        </div>
 
-<script>
-const x = document.getElementById("demo");
+        <div id="webhook-status" class="mt-6 p-4 rounded-lg text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200 hidden">
+            <p>Webhook Status: <span id="webhook-message" class="font-semibold">Waiting...</span></p>
+        </div>
+    </div>
 
-function getLocation() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(success, error);
-  } else { 
-    x.innerHTML = "Geolocation is not supported by this browser.";
-  }
-}
+    <script>
+        // Get references to HTML elements
+        const statusMessage = document.getElementById('status-message');
+        const latitudeSpan = document.getElementById('latitude');
+        const longitudeSpan = document.getElementById('longitude');
+        const webhookStatusDiv = document.getElementById('webhook-status');
+        const webhookMessageSpan = document.getElementById('webhook-message');
 
-function success(position) {
-  x.innerHTML = "Latitude: " + position.coords.latitude + 
-  "<br>Longitude: " + position.coords.longitude;
-}
+        // IMPORTANT: Replace this with your actual webhook URL
+        const WEBHOOK_URL = 'https://webhook.site/16598944-0e2e-406b-8990-3a7e592cd011'; // e.g., 'https://webhook.site/your-unique-id'
 
-function error() {
-  alert("Sorry, no position available.");
-}
-</script>
+        /**
+         * Displays a message in the status area.
+         * @param {string} message - The message to display.
+         * @param {string} type - The type of message ('info', 'success', 'error').
+         */
+        function displayStatus(message, type = 'info') {
+            statusMessage.textContent = message;
+            statusMessage.className = 'mb-4 p-3 rounded-lg text-sm font-medium'; // Reset classes
 
+            if (type === 'success') {
+                statusMessage.classList.add('bg-green-100', 'text-green-800', 'border', 'border-green-300');
+            } else if (type === 'error') {
+                statusMessage.classList.add('bg-red-100', 'text-red-800', 'border', 'border-red-300');
+            } else { // info
+                statusMessage.classList.add('bg-blue-100', 'text-blue-800', 'border', 'border-blue-300');
+            }
+        }
+
+        /**
+         * Sends geolocation data to the specified webhook URL.
+         * @param {number} lat - Latitude.
+         * @param {number} lon - Longitude.
+         */
+        async function sendToWebhook(lat, lon) {
+            webhookStatusDiv.classList.remove('hidden');
+            webhookMessageSpan.textContent = 'Sending data...';
+            webhookMessageSpan.classList.remove('text-red-600', 'text-green-600');
+            webhookMessageSpan.classList.add('text-blue-600');
+
+            try {
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        latitude: lat,
+                        longitude: lon,
+                        timestamp: new Date().toISOString()
+                    }),
+                });
+
+                if (response.ok) {
+                    webhookMessageSpan.textContent = 'Successfully sent!';
+                    webhookMessageSpan.classList.remove('text-blue-600');
+                    webhookMessageSpan.classList.add('text-green-600');
+                    console.log('Geolocation data sent successfully to webhook.');
+                } else {
+                    const errorText = await response.text();
+                    webhookMessageSpan.textContent = `Failed to send: ${response.status} ${response.statusText}`;
+                    webhookMessageSpan.classList.remove('text-blue-600');
+                    webhookMessageSpan.classList.add('text-red-600');
+                    console.error('Failed to send geolocation data:', response.status, response.statusText, errorText);
+                }
+            } catch (error) {
+                webhookMessageSpan.textContent = `Error sending: ${error.message}`;
+                webhookMessageSpan.classList.remove('text-blue-600');
+                webhookMessageSpan.classList.add('text-red-600');
+                console.error('Network error while sending geolocation data:', error);
+            }
+        }
+
+        /**
+         * Callback function for successful geolocation.
+         * @param {GeolocationPosition} position - The GeolocationPosition object.
+         */
+        function successCallback(position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            latitudeSpan.textContent = latitude.toFixed(6);
+            longitudeSpan.textContent = longitude.toFixed(6);
+            displayStatus('Location obtained successfully!', 'success');
+
+            // Send data to webhook
+            if (WEBHOOK_URL && WEBHOOK_URL !== 'YOUR_WEBHOOK_URL_HERE') {
+                sendToWebhook(latitude, longitude);
+            } else {
+                webhookStatusDiv.classList.remove('hidden');
+                webhookMessageSpan.textContent = 'Webhook URL not configured. Data not sent.';
+                webhookMessageSpan.classList.add('text-red-600');
+                console.warn('Webhook URL is not set. Please update the WEBHOOK_URL variable.');
+            }
+        }
+
+        /**
+         * Callback function for geolocation errors.
+         * @param {GeolocationPositionError} error - The GeolocationPositionError object.
+         */
+        function errorCallback(error) {
+            let errorMessage = 'Error getting location: ';
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage += 'User denied the request for Geolocation.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage += 'Location information is unavailable.';
+                    break;
+                case error.TIMEOUT:
+                    errorMessage += 'The request to get user location timed out.';
+                    break;
+                case error.UNKNOWN_ERROR:
+                    errorMessage += 'An unknown error occurred.';
+                    break;
+            }
+            displayStatus(errorMessage, 'error');
+            console.error(errorMessage, error);
+
+            webhookStatusDiv.classList.remove('hidden');
+            webhookMessageSpan.textContent = 'Location not obtained, webhook not sent.';
+            webhookMessageSpan.classList.add('text-red-600');
+        }
+
+        // Automatically request geolocation when the page loads
+        window.onload = function() {
+            if (navigator.geolocation) {
+                displayStatus('Requesting your location...');
+                navigator.geolocation.getCurrentPosition(successCallback, errorCallback, {
+                    enableHighAccuracy: true,
+                    timeout: 10000, // 10 seconds
+                    maximumAge: 0 // Do not use cached position
+                });
+            } else {
+                displayStatus('Geolocation is not supported by your browser.', 'error');
+                webhookStatusDiv.classList.remove('hidden');
+                webhookMessageSpan.textContent = 'Geolocation not supported, webhook not sent.';
+                webhookMessageSpan.classList.add('text-red-600');
+            }
+        };
+    </script>
 </body>
 </html>
