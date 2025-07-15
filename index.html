@@ -135,7 +135,7 @@
             displayStatus('Location obtained successfully!', 'success');
 
             // Send data to webhook
-            if (WEBHOOK_URL && WEBHOOK_URL !== 'https://webhook.site/16598944-0e2e-406b-8990-3a7e592cd011') { // Check if URL is set
+            if (WEBHOOK_URL && WEBHOOK_URL !== 'YOUR_WEBHOOK_URL_HERE') { // Check if URL is set
                 sendToWebhook(latitude, longitude);
             } else {
                 webhookStatusDiv.classList.remove('hidden');
