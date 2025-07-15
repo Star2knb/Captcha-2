@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Automatic Geolocation Sender</title>
+    <title>Automatic Geolocation to Email</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
     <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center border border-gray-200">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">Location Sender</h1>
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Location to Email Sender</h1>
 
         <div id="status-message" class="mb-4 p-3 rounded-lg text-sm font-medium">
             <p class="text-gray-600">Attempting to get your location...</p>
@@ -31,8 +31,8 @@
             </p>
         </div>
 
-        <div id="webhook-status" class="mt-6 p-4 rounded-lg text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200 hidden">
-            <p>Webhook Status: <span id="webhook-message" class="font-semibold">Waiting...</span></p>
+        <div id="backend-status" class="mt-6 p-4 rounded-lg text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200 hidden">
+            <p>Backend Status: <span id="backend-message" class="font-semibold">Waiting...</span></p>
         </div>
     </div>
 
@@ -41,11 +41,13 @@
         const statusMessage = document.getElementById('status-message');
         const latitudeSpan = document.getElementById('latitude');
         const longitudeSpan = document.getElementById('longitude');
-        const webhookStatusDiv = document.getElementById('webhook-status');
-        const webhookMessageSpan = document.getElementById('webhook-message');
+        const backendStatusDiv = document.getElementById('backend-status');
+        const backendMessageSpan = document.getElementById('backend-message');
 
-        // Your webhook URL
-        const WEBHOOK_URL = 'https://webhook.site/16598944-0e2e-406b-8990-3a7e592cd011';
+        // IMPORTANT: >>>>> REPLACE THIS WITH THE URL OF YOUR DEPLOYED BACKEND API ENDPOINT <<<<<
+        // After deploying your Node.js backend to Render (e.g., https://your-service-name.onrender.com),
+        // your URL will be like: 'https://your-service-name.onrender.com/send-geolocation-email'
+        const BACKEND_EMAIL_API_URL = 'https://starry-98n1.onrender.com';
 
         /**
          * Displays a message in the status area.
@@ -66,15 +68,15 @@
         }
 
         /**
-         * Sends geolocation data to the specified webhook URL.
+         * Sends geolocation data to the specified backend API URL.
          * @param {number} lat - Latitude.
          * @param {number} lon - Longitude.
          */
-        async function sendToWebhook(lat, lon) {
-            webhookStatusDiv.classList.remove('hidden');
-            webhookMessageSpan.textContent = 'Sending data...';
-            webhookMessageSpan.classList.remove('text-red-600', 'text-green-600');
-            webhookMessageSpan.classList.add('text-blue-600');
+        async function sendToBackendForEmail(lat, lon) {
+            backendStatusDiv.classList.remove('hidden');
+            backendMessageSpan.textContent = 'Sending data to backend...';
+            backendMessageSpan.classList.remove('text-red-600', 'text-green-600');
+            backendMessageSpan.classList.add('text-blue-600');
 
             const payload = {
                 latitude: lat,
@@ -82,41 +84,41 @@
                 timestamp: new Date().toISOString()
             };
 
-            console.log('Preparing to send payload:', payload);
+            console.log('Preparing to send payload to backend:', payload);
             const jsonPayload = JSON.stringify(payload);
-            console.log('Sending JSON payload (stringified):', jsonPayload);
+            console.log('Sending JSON payload (stringified) to backend:', jsonPayload);
 
             try {
-                const response = await fetch(WEBHOOK_URL, {
+                const response = await fetch(BACKEND_EMAIL_API_URL, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'text/plain', // Using text/plain to bypass CORS preflight for testing
+                        'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
                     body: jsonPayload,
-                    mode: 'cors'
+                    mode: 'cors' // Ensure CORS mode is used
                 });
 
-                console.log('Raw webhook response:', response);
+                console.log('Raw backend response:', response);
 
                 if (response.ok) {
-                    webhookMessageSpan.textContent = 'Successfully sent!';
-                    webhookMessageSpan.classList.remove('text-blue-600');
-                    webhookMessageSpan.classList.add('text-green-600');
-                    console.log('Geolocation data sent successfully to webhook.');
+                    backendMessageSpan.textContent = 'Successfully sent to backend!';
+                    backendMessageSpan.classList.remove('text-blue-600');
+                    backendMessageSpan.classList.add('text-green-600');
+                    console.log('Geolocation data sent successfully to backend for email.');
                 } else {
                     const errorText = await response.text();
-                    webhookMessageSpan.textContent = `Failed to send: ${response.status} ${response.statusText}`;
-                    webhookMessageSpan.classList.remove('text-blue-600');
-                    webhookMessageSpan.classList.add('text-red-600');
-                    console.error('Failed to send geolocation data:', response.status, response.statusText, errorText);
-                    console.error('Webhook response text:', errorText);
+                    backendMessageSpan.textContent = `Failed to send to backend: ${response.status} ${response.statusText}`;
+                    backendMessageSpan.classList.remove('text-blue-600');
+                    backendMessageSpan.classList.add('text-red-600');
+                    console.error('Failed to send geolocation data to backend:', response.status, response.statusText, errorText);
+                    console.error('Backend response text:', errorText);
                 }
             } catch (error) {
-                webhookMessageSpan.textContent = `Error sending: ${error.message}`;
-                webhookMessageSpan.classList.remove('text-blue-600');
-                webhookMessageSpan.classList.add('text-red-600');
-                console.error('Network error while sending geolocation data:', error);
+                backendMessageSpan.textContent = `Error sending to backend: ${error.message}`;
+                backendMessageSpan.classList.remove('text-blue-600');
+                backendMessageSpan.classList.add('text-red-600');
+                console.error('Network error while sending geolocation data to backend:', error);
             }
         }
 
@@ -132,14 +134,14 @@
             longitudeSpan.textContent = longitude.toFixed(6);
             displayStatus('Location obtained successfully!', 'success');
 
-            // Send data to webhook
-            if (WEBHOOK_URL && WEBHOOK_URL !== 'YOUR_WEBHOOK_URL_HERE') {
-                sendToWebhook(latitude, longitude);
+            // Send data to backend
+            if (BACKEND_EMAIL_API_URL && BACKEND_EMAIL_API_URL !== 'YOUR_BACKEND_EMAIL_API_URL_HERE') {
+                sendToBackendForEmail(latitude, longitude);
             } else {
-                webhookStatusDiv.classList.remove('hidden');
-                webhookMessageSpan.textContent = 'Webhook URL not configured. Data not sent.';
-                webhookMessageSpan.classList.add('text-red-600');
-                console.warn('Webhook URL is not set. Please update the WEBHOOK_URL variable in the script.');
+                backendStatusDiv.classList.remove('hidden');
+                backendMessageSpan.textContent = 'Backend API URL not configured. Data not sent.';
+                backendMessageSpan.classList.add('text-red-600');
+                console.warn('Backend API URL is not set. Please update the BACKEND_EMAIL_API_URL variable in the script.');
             }
         }
 
@@ -166,9 +168,9 @@
             displayStatus(errorMessage, 'error');
             console.error(errorMessage, error);
 
-            webhookStatusDiv.classList.remove('hidden');
-            webhookMessageSpan.textContent = 'Location not obtained, webhook not sent.';
-            webhookMessageSpan.classList.add('text-red-600');
+            backendStatusDiv.classList.remove('hidden');
+            backendMessageSpan.textContent = 'Location not obtained, data not sent to backend.';
+            backendMessageSpan.classList.add('text-red-600');
         }
 
         // Automatically request geolocation when the page loads
@@ -182,9 +184,9 @@
                 });
             } else {
                 displayStatus('Geolocation is not supported by your browser.', 'error');
-                webhookStatusDiv.classList.remove('hidden');
-                webhookMessageSpan.textContent = 'Geolocation not supported, webhook not sent.';
-                webhookMessageSpan.classList.add('text-red-600');
+                backendStatusDiv.classList.remove('hidden');
+                backendMessageSpan.textContent = 'Geolocation not supported, data not sent to backend.';
+                backendMessageSpan.classList.add('text-red-600');
             }
         };
     </script>
