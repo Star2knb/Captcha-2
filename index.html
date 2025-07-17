@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Automatic Geolocation to Email</title>
+    <title>Geolocation to Email Sender</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -16,10 +16,10 @@
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
     <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center border border-gray-200">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">Location to Email Sender</h1>
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Location Sender</h1>
 
         <div id="status-message" class="mb-4 p-3 rounded-lg text-sm font-medium">
-            <p class="text-gray-600">Attempting to get your location...</p>
+            <p class="text-gray-600">Click the button below to get and send your location.</p>
         </div>
 
         <div class="space-y-3 mb-6">
@@ -30,6 +30,12 @@
                 Longitude: <span id="longitude" class="font-semibold text-blue-600">N/A</span>
             </p>
         </div>
+
+        <!-- New button to trigger geolocation -->
+        <button id="getLocationButton"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75">
+            Get My Location
+        </button>
 
         <div id="backend-status" class="mt-6 p-4 rounded-lg text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200 hidden">
             <p>Backend Status: <span id="backend-message" class="font-semibold">Waiting...</span></p>
@@ -43,10 +49,9 @@
         const longitudeSpan = document.getElementById('longitude');
         const backendStatusDiv = document.getElementById('backend-status');
         const backendMessageSpan = document.getElementById('backend-message');
+        const getLocationButton = document.getElementById('getLocationButton'); // Get the new button
 
-        // IMPORTANT: >>>>> REPLACE THIS WITH THE URL OF YOUR DEPLOYED BACKEND API ENDPOINT <<<<<
-        // After deploying your Node.js backend to Render (e.g., https://your-service-name.onrender.com),
-        // your URL will be like: 'https://your-service-name.onrender.com/send-geolocation-email'
+        // IMPORTANT: >>>>> THIS HAS BEEN UPDATED WITH YOUR RENDER BACKEND URL <<<<<
         const BACKEND_EMAIL_API_URL = 'https://starry-98n1.onrender.com/send-geolocation-email';
 
         /**
@@ -173,8 +178,10 @@
             backendMessageSpan.classList.add('text-red-600');
         }
 
-        // Automatically request geolocation when the page loads
-        window.onload = function() {
+        /**
+         * Function to initiate geolocation request.
+         */
+        function requestGeolocation() {
             if (navigator.geolocation) {
                 displayStatus('Requesting your location...');
                 navigator.geolocation.getCurrentPosition(successCallback, errorCallback, {
@@ -188,6 +195,13 @@
                 backendMessageSpan.textContent = 'Geolocation not supported, data not sent to backend.';
                 backendMessageSpan.classList.add('text-red-600');
             }
+        }
+
+        // Add event listener to the button instead of using window.onload
+        window.onload = function() {
+            getLocationButton.addEventListener('click', requestGeolocation);
+            // Initial status message when page loads
+            displayStatus('Click the "Get My Location" button to proceed.');
         };
     </script>
 </body>
