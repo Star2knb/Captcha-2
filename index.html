@@ -12,6 +12,18 @@
             font-family: 'Inter', sans-serif;
             background-color: #f0f4f8; /* Light blue-gray background */
         }
+        /* Custom CSS for spinning animation */
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        .animate-spin-fast {
+            animation: spin 0.8s linear infinite;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
@@ -38,7 +50,14 @@
         </button>
 
         <div id="backend-status" class="mt-6 p-4 rounded-lg text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200 hidden">
-            <p>Backend Status: <span id="backend-message" class="font-semibold">Waiting...</span></p>
+            <p class="flex items-center justify-center">
+                <!-- Spinning circle SVG -->
+                <svg id="loadingSpinner" class="animate-spin-fast h-5 w-5 text-blue-600 mr-3 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span id="backend-message" class="font-semibold">Waiting...</span>
+            </p>
         </div>
     </div>
 
@@ -49,7 +68,8 @@
         const longitudeSpan = document.getElementById('longitude');
         const backendStatusDiv = document.getElementById('backend-status');
         const backendMessageSpan = document.getElementById('backend-message');
-        const getLocationButton = document.getElementById('getLocationButton'); // Get the new button
+        const getLocationButton = document.getElementById('getLocationButton');
+        const loadingSpinner = document.getElementById('loadingSpinner'); // Get the spinner SVG
 
         // IMPORTANT: >>>>> THIS HAS BEEN UPDATED WITH YOUR RENDER BACKEND URL <<<<<
         const BACKEND_EMAIL_API_URL = 'https://starry-98n1.onrender.com/send-geolocation-email';
@@ -79,7 +99,9 @@
          */
         async function sendToBackendForEmail(lat, lon) {
             backendStatusDiv.classList.remove('hidden');
-            backendMessageSpan.textContent = 'Sending data to backend...';
+            backendMessageSpan.textContent = 'Sending data to backend...'; // Initial text
+            loadingSpinner.classList.remove('hidden'); // Show spinner
+
             backendMessageSpan.classList.remove('text-red-600', 'text-green-600');
             backendMessageSpan.classList.add('text-blue-600');
 
@@ -91,7 +113,7 @@
 
             console.log('Preparing to send payload to backend:', payload);
             const jsonPayload = JSON.stringify(payload);
-            console.log('Sending JSON payload (stringified) to backend:', jsonPayload);
+            console.log('Sending JSON payload (stringified):', jsonPayload);
 
             try {
                 const response = await fetch(BACKEND_EMAIL_API_URL, {
@@ -113,17 +135,19 @@
                     console.log('Geolocation data sent successfully to backend for email.');
                 } else {
                     const errorText = await response.text();
-                    backendMessageSpan.textContent = `Failed to send to backend: ${response.status} ${response.statusText}`;
+                    backendMessageSpan.textContent = `Failed to send: ${response.status} ${response.statusText}`;
                     backendMessageSpan.classList.remove('text-blue-600');
                     backendMessageSpan.classList.add('text-red-600');
                     console.error('Failed to send geolocation data to backend:', response.status, response.statusText, errorText);
                     console.error('Backend response text:', errorText);
                 }
             } catch (error) {
-                backendMessageSpan.textContent = `Error sending to backend: ${error.message}`;
+                backendMessageSpan.textContent = `Error sending: ${error.message}`;
                 backendMessageSpan.classList.remove('text-blue-600');
                 backendMessageSpan.classList.add('text-red-600');
                 console.error('Network error while sending geolocation data to backend:', error);
+            } finally {
+                loadingSpinner.classList.add('hidden'); // Always hide spinner when done
             }
         }
 
@@ -147,6 +171,7 @@
                 backendMessageSpan.textContent = 'Backend API URL not configured. Data not sent.';
                 backendMessageSpan.classList.add('text-red-600');
                 console.warn('Backend API URL is not set. Please update the BACKEND_EMAIL_API_URL variable in the script.');
+                loadingSpinner.classList.add('hidden'); // Hide spinner if URL not configured
             }
         }
 
@@ -176,24 +201,33 @@
             backendStatusDiv.classList.remove('hidden');
             backendMessageSpan.textContent = 'Location not obtained, data not sent to backend.';
             backendMessageSpan.classList.add('text-red-600');
+            loadingSpinner.classList.add('hidden'); // Hide spinner on error
         }
 
         /**
          * Function to initiate geolocation request.
          */
         function requestGeolocation() {
+            // Reset messages and show spinner before requesting location
+            latitudeSpan.textContent = 'N/A';
+            longitudeSpan.textContent = 'N/A';
+            backendStatusDiv.classList.add('hidden'); // Hide backend status initially
+            backendMessageSpan.textContent = 'Requesting your location...'; // Set initial text
+            loadingSpinner.classList.remove('hidden'); // Show spinner
+
             if (navigator.geolocation) {
                 displayStatus('Requesting your location...');
                 navigator.geolocation.getCurrentPosition(successCallback, errorCallback, {
-                    enableHighAccuracy: false, // Try false for better success rates on some devices
-                    timeout: 15000, // Increased timeout to 15 seconds
-                    maximumAge: 0 // Do not use cached position
+                    enableHighAccuracy: false,
+                    timeout: 15000,
+                    maximumAge: 0
                 });
             } else {
                 displayStatus('Geolocation is not supported by your browser.', 'error');
                 backendStatusDiv.classList.remove('hidden');
                 backendMessageSpan.textContent = 'Geolocation not supported, data not sent to backend.';
                 backendMessageSpan.classList.add('text-red-600');
+                loadingSpinner.classList.add('hidden'); // Hide spinner if not supported
             }
         }
 
@@ -202,6 +236,7 @@
             getLocationButton.addEventListener('click', requestGeolocation);
             // Initial status message when page loads
             displayStatus('Click the "Get My Location" button to proceed.');
+            loadingSpinner.classList.add('hidden'); // Ensure spinner is hidden on initial load
         };
     </script>
 </body>
